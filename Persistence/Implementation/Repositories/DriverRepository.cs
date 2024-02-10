@@ -20,8 +20,8 @@ namespace Persistence.Implementation.Repositories
         public async Task<Guid> CreateDriver(CreateDriverCommand driver)
         {
             var query = @"
-                INSERT INTO Driver (Id, FirstName, LastName, Email, PhoneNumber)
-                VALUES (@Id, @FirstName, @LastName, @Email, @PhoneNumber)";
+                INSERT INTO Driver (Id, FirstName, LastName, Email, PhoneNumber, CreatedDate, CreatedBy, IsDeleted)
+                VALUES (@Id, @FirstName, @LastName, @Email, @PhoneNumber, @CreatedDate, 'Test User', 0)";
 
             var parameters = new Dictionary<string, object>
             {
@@ -29,7 +29,9 @@ namespace Persistence.Implementation.Repositories
                 {"@FirstName", driver.FirstName},
                 {"@LastName", driver.LastName},
                 {"@Email", driver.Email},
-                {"@PhoneNumber", driver.PhoneNumber}
+                {"@PhoneNumber", driver.PhoneNumber},
+                {"@CreatedDate", DateTimeOffset.Now.ToString()},
+                {"@CreatedBy", "Test User"}
             };
 
             await using var connection = await GetOpenedConnection();
@@ -49,7 +51,9 @@ namespace Persistence.Implementation.Repositories
                 SET FirstName = COALESCE(@FirstName, FirstName),
                     LastName = COALESCE(@LastName, LastName),
                     Email = COALESCE(@Email, Email),
-                    PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber)
+                    PhoneNumber = COALESCE(@PhoneNumber, PhoneNumber),
+                    UpdatedDate = @UpdatedDate,
+                    UpdatedBy = @UpdatedBy
                 WHERE Id = @Id";
 
             var parameters = new Dictionary<string, object>
@@ -58,7 +62,9 @@ namespace Persistence.Implementation.Repositories
                 {"@LastName", driver.LastName},
                 {"@Email", driver.Email},
                 {"@PhoneNumber", driver.PhoneNumber},
-                {"@Id", driver.Id.ToString()}
+                {"@Id", driver.Id.ToString()},
+                {"@UpdatedDate", DateTimeOffset.Now.ToString()},
+                {"@UpdatedBy", "Test User"}
             };
 
             return await ExecuteSqlNonQuery(query, parameters) > 0;
@@ -66,7 +72,7 @@ namespace Persistence.Implementation.Repositories
 
         public async Task<bool> IsDriverExist(Guid id)
         {
-            var query = "SELECT EXISTS(SELECT 1 FROM Driver WHERE Id = @Id)";
+            var query = "SELECT EXISTS(SELECT 1 FROM Driver WHERE Id = @Id AND IsDeleted = 0)";
 
             var parameters = new Dictionary<string, object> { { "@Id", id.ToString() } };
 
@@ -82,7 +88,7 @@ namespace Persistence.Implementation.Repositories
 
         public async Task<Driver> GetDriver(Guid id)
         {
-            var query = "SELECT * FROM Driver WHERE Id = @Id";
+            var query = "SELECT * FROM Driver WHERE Id = @Id AND IsDeleted = 0";
 
             var parameters = new Dictionary<string, object> { { "@Id", id.ToString() } };
 
@@ -104,7 +110,7 @@ namespace Persistence.Implementation.Repositories
 
         public async Task<List<Driver>> GetAllDrivers()
         {
-            var query = "SELECT * FROM Driver";
+            var query = "SELECT * FROM Driver WHERE IsDeleted = 0";
 
             await using var connection = await GetOpenedConnection();
             await using var command = connection.CreateCommand();
@@ -124,7 +130,7 @@ namespace Persistence.Implementation.Repositories
 
         public async Task<bool> DeleteDriver(Guid id)
         {
-            var query = "DELETE FROM Driver WHERE Id = @Id";
+            var query = "UPDATE Driver SET IsDeleted = 1, DeletedBy = 'Test User' WHERE Id = @Id";
 
             var parameters = new Dictionary<string, object> { { "@Id", id.ToString() } };
             var result = await ExecuteSqlNonQuery(query, parameters);

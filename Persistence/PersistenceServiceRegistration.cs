@@ -40,12 +40,19 @@ namespace Persistence
                 using var connection = new SqliteConnection(_config.GetConnectionString("Sqlite-Default"));
                 connection.Open();
                 using var command = new SqliteCommand(@"
-                    CREATE TABLE IF NOT EXISTS Driver (
-                        Id TEXT PRIMARY KEY,
-                        FirstName TEXT,
-                        LastName TEXT,
-                        Email TEXT,
-                        PhoneNumber TEXT);", connection);
+                         CREATE TABLE IF NOT EXISTS Driver (
+                             Id TEXT PRIMARY KEY,
+                             FirstName TEXT,
+                             LastName TEXT,
+                             Email TEXT,
+                             PhoneNumber TEXT,
+                             CreatedDate TEXT,
+                             CreatedBy TEXT,
+                             UpdatedDate TEXT,
+                             UpdatedBy TEXT,
+                             DeletedDate TEXT,
+                             DeletedBy TEXT,
+                             IsDeleted INTEGER);", connection);
                 command.ExecuteNonQuery();
 
                 InsertSeedData(connection);
@@ -58,8 +65,8 @@ namespace Persistence
         {
             var seedData = new[]
             {
-                new { Id = Guid.NewGuid().ToString(), FirstName = "Sherif", LastName = "ElGazzar", Email = "sherif@gmail.com", PhoneNumber = "123-456-7890" },
-                new { Id = Guid.NewGuid().ToString(), FirstName = "Dina", LastName = "Sidky", Email = "dina@dina.com", PhoneNumber = "987-654-3210" }
+                new { Id = Guid.NewGuid().ToString(), FirstName = "Sherif", LastName = "ElGazzar", Email = "sherif@gmail.com", PhoneNumber = "123-456-7890", CreatedDate = DateTimeOffset.Now.ToString(), CreatedBy = "System" },
+                new { Id = Guid.NewGuid().ToString(), FirstName = "Dina", LastName = "Sidky", Email = "dina@dina.com", PhoneNumber = "987-654-3210", CreatedDate = DateTimeOffset.Now.ToString(), CreatedBy = "System" }
             };
             try
             {
@@ -67,13 +74,20 @@ namespace Persistence
                 {
                     using var insertCommand = connection.CreateCommand();
                     insertCommand.CommandText = @"
-                    INSERT INTO Driver (Id, FirstName, LastName, Email, PhoneNumber)
-                    VALUES (@Id, @FirstName, @LastName, @Email, @PhoneNumber)";
+            INSERT INTO Driver (Id, FirstName, LastName, Email, PhoneNumber, CreatedDate, CreatedBy, UpdatedDate, UpdatedBy, DeletedDate, DeletedBy, IsDeleted)
+            VALUES (@Id, @FirstName, @LastName, @Email, @PhoneNumber, @CreatedDate, @CreatedBy, @UpdatedDate, @UpdatedBy, @DeletedDate, @DeletedBy, @IsDeleted)";
                     insertCommand.Parameters.AddWithValue("@Id", data.Id);
                     insertCommand.Parameters.AddWithValue("@FirstName", data.FirstName);
                     insertCommand.Parameters.AddWithValue("@LastName", data.LastName);
                     insertCommand.Parameters.AddWithValue("@Email", data.Email);
                     insertCommand.Parameters.AddWithValue("@PhoneNumber", data.PhoneNumber);
+                    insertCommand.Parameters.AddWithValue("@CreatedDate", data.CreatedDate);
+                    insertCommand.Parameters.AddWithValue("@CreatedBy", data.CreatedBy);
+                    insertCommand.Parameters.AddWithValue("@UpdatedDate", DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("@UpdatedBy", DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("@DeletedDate", DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("@DeletedBy", DBNull.Value);
+                    insertCommand.Parameters.AddWithValue("@IsDeleted", 0);
 
                     insertCommand.ExecuteNonQuery();
                 }

@@ -24,8 +24,8 @@ namespace Persistence.Implementation.Factories.Implementations
             return new GetAllDriversSortedNamesQueryResponse
             {
                 Email = driver.Email,
-                FirstName = new string(driver.FirstName.OrderBy(firstName => firstName).ToArray()),
-                LastName = new string(driver.LastName.OrderBy(lastName => lastName).ToArray()),
+                FirstName = new string(driver.FirstName.OrderBy(firstName => char.ToUpper(firstName)).ToArray()),
+                LastName = new string(driver.LastName.OrderBy(lastName => char.ToUpper(lastName)).ToArray()),
                 Id = driver.Id,
                 PhoneNumber = driver.PhoneNumber
             };

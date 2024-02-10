@@ -1,11 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Domain.Common;
 
 namespace Domain.Entities
 {
-    public class Driver
+    public class Driver : BaseEntity
     {
-        [Required]
-        public Guid Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
